@@ -39,7 +39,11 @@ FusionEKF::FusionEKF() {
   */
   H_laser_<< 1,0,0,0,
             0,1,0,0;
-
+  ekf_.P_ = MatrixXd(4,4);
+  ekf_.P_ << 0.0225, 0, 0, 0,
+        0, 0.0225, 0, 0,
+        0, 0, 0.0225, 0,
+        0, 0, 0, 0.0225;
 }
 
 /**
@@ -53,6 +57,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   /*****************************************************************************
    *  Initialization
    ****************************************************************************/
+  long long t = measurement_pack.timestamp_ - previous_timestamp_;
   if (!is_initialized_) {
     /**
     TODO:
@@ -63,7 +68,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    ekf_.x_ << 0, 0, 0, 0;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -79,10 +84,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
       ekf_.x_ << px,py,vx,vy;
 
-      ekf_.P_ << 0.0225, 0, 0, 0,
-        0, 0.0225, 0, 0,
-        0, 0, 0.0225, 0,
-        0, 0, 0, 0.0225;
+      
 
 
     }
@@ -94,19 +96,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       double py = measurement_pack.raw_measurements_(1);
       ekf_.x_ << px,py,1,1;
 
-      ekf_.P_ << 0.0225, 0, 0, 0,
-        0, 0.0225, 0, 0,
-        0, 0, 1000, 0,
-        0, 0, 0, 1000;
-
     }
     ekf_.F_ = MatrixXd(4,4);
-    ekf_.F_ << 1,0,1,0,
-              0,1,0,1,
+    ekf_.F_ << 1,0,t,0,
+              0,1,0,t,
               0,0,1,0,
               0,0,0,1;
     ekf_.H_ = H_laser_;
-
+    previous_timestamp_ = measurement_pack.timestamp_;
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;
@@ -125,7 +122,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
   double noise_ax = 9;
   double noise_ay = 9;
-  long long t = measurement_pack.timestamp_ - previous_timestamp_;
   double c1 = pow(t,4)/4;
   double c2 = pow(t,3)/2;
   double c3 = pow(t,2);
