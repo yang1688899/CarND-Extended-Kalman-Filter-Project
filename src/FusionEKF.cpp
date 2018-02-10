@@ -40,10 +40,10 @@ FusionEKF::FusionEKF() {
   H_laser_<< 1,0,0,0,
             0,1,0,0;
   ekf_.P_ = MatrixXd(4,4);
-  ekf_.P_ << 0.0225, 0, 0, 0,
-        0, 0.0225, 0, 0,
-        0, 0, 0.0225, 0,
-        0, 0, 0, 0.0225;
+  ekf_.P_ << 1.0, 0, 0, 0,
+        0, 1.0, 0, 0,
+        0, 0, 1000, 0,
+        0, 0, 0, 1000;
 }
 
 /**
@@ -77,10 +77,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       double rho = measurement_pack.raw_measurements_(0);
       double phi = measurement_pack.raw_measurements_(1);
       double rho_dot = measurement_pack.raw_measurements_(2);
-      double px = rho * sin(phi);
-      double py = rho * cos(phi);
-      double vx = rho_dot/cos(phi) * sin(M_PI/2 - 2*phi);
-      double vy = rho_dot/cos(phi) * cos(M_PI/2 - 2*phi);
+      double px = rho * cos(phi);
+      double py = rho * sin(phi);
+      double vx = 0;
+      double vy = 0;
 
       ekf_.x_ << px,py,vx,vy;
 
@@ -94,7 +94,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
       double px = measurement_pack.raw_measurements_(0);
       double py = measurement_pack.raw_measurements_(1);
-      ekf_.x_ << px,py,1,1;
+      ekf_.x_ << px,py,0,0;
 
     }
     ekf_.F_ = MatrixXd(4,4);

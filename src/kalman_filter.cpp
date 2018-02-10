@@ -53,6 +53,14 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   MatrixXd Hj = tools.CalculateJacobian(x_);
   MatrixXd I = MatrixXd::Identity(F_.rows(),F_.cols());
 
+  VectorXd z_pred = Hj * x_;
+  while (z_pred(1)-z(1)>M_PI/2){
+    z_pred(1) = z_pred(1)-M_PI;
+  }
+  while (z(1)-z_pred(1)>M_PI/2){
+    z_pred(1) = z_pred(1)+M_PI;
+  }
+
   VectorXd y = z - Hj * x_;
   MatrixXd S = Hj * P_ * Hj.transpose() + R_;
   MatrixXd K = P_ * Hj.transpose() * S.inverse();
