@@ -57,7 +57,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   /*****************************************************************************
    *  Initialization
    ****************************************************************************/
-  long long t = measurement_pack.timestamp_ - previous_timestamp_;
+  double t = (measurement_pack.timestamp_ - previous_timestamp_)/1000000.0;
   if (!is_initialized_) {
     /**
     TODO:
@@ -97,11 +97,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.x_ << px,py,0,0;
 
     }
-    ekf_.F_ = MatrixXd(4,4);
-    ekf_.F_ << 1,0,t,0,
-              0,1,0,t,
-              0,0,1,0,
-              0,0,0,1;
+
     ekf_.H_ = H_laser_;
     previous_timestamp_ = measurement_pack.timestamp_;
     // done initializing, no need to predict or update
@@ -120,20 +116,28 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-  double noise_ax = 9;
-  double noise_ay = 9;
-  double c1 = pow(t,4)/4;
-  double c2 = pow(t,3)/2;
-  double c3 = pow(t,2);
-  double x_sq = pow(noise_ax,2);
-  double y_sq = pow(noise_ay,2);
-  ekf_.Q_ = MatrixXd(4,4);
-  ekf_.Q_ << c1*x_sq, 0, c2*x_sq, 0,
-              0, c1*y_sq, 0, c2*y_sq,
-              c2*x_sq, 0, c3*x_sq, 0,
-              0, c2*y_sq, 0, c3*y_sq;
+  
+  if(t > std::numeric_limits<double>::epsilon()){
+    ekf_.F_ = MatrixXd(4,4);
+    ekf_.F_ << 1,0,t,0,
+              0,1,0,t,
+              0,0,1,0,
+              0,0,0,1;
 
-  ekf_.Predict();
+    double noise_ax = 9;
+    double noise_ay = 9;
+    double c1 = pow(t,4)/4;
+    double c2 = pow(t,3)/2;
+    double c3 = pow(t,2);
+    double x_sq = pow(noise_ax,2);
+    double y_sq = pow(noise_ay,2);
+    ekf_.Q_ = MatrixXd(4,4);
+    ekf_.Q_ << c1*x_sq, 0, c2*x_sq, 0,
+                0, c1*y_sq, 0, c2*y_sq,
+                c2*x_sq, 0, c3*x_sq, 0,
+                0, c2*y_sq, 0, c3*y_sq;
+    ekf_.Predict();
+  }
 
   previous_timestamp_ = measurement_pack.timestamp_;
 
