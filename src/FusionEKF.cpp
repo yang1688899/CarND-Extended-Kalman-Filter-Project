@@ -129,13 +129,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     double c1 = pow(t,4)/4;
     double c2 = pow(t,3)/2;
     double c3 = pow(t,2);
-    double x_sq = pow(noise_ax,2);
-    double y_sq = pow(noise_ay,2);
     ekf_.Q_ = MatrixXd(4,4);
-    ekf_.Q_ << c1*x_sq, 0, c2*x_sq, 0,
-                0, c1*y_sq, 0, c2*y_sq,
-                c2*x_sq, 0, c3*x_sq, 0,
-                0, c2*y_sq, 0, c3*y_sq;
+    ekf_.Q_ << c1*noise_ax, 0, c2*noise_ax, 0,
+                0, c1*noise_ay, 0, c2*noise_ay,
+                c2*noise_ax, 0, c3*noise_ax, 0,
+                0, c2*noise_ay, 0, c3*noise_ay;
     ekf_.Predict();
   }
 
